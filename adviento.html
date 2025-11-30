@@ -90,11 +90,48 @@
             50% { transform: translateY(0); } 75% { transform: translateY(30px); } 100% { right: 110%; transform: translateY(0); } 
         }
         
-        .music-control { position: fixed; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 10px 20px; z-index: 100; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
-        .music-control:hover { background: rgba(0, 0, 0, 0.9); transform: scale(1.05); }
+        /* ================= REPRODUCTOR MINI-EXPANDIBLE ================= */
+        .music-control {
+            position: fixed;
+            bottom: 20px; right: 20px; z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50px;
+            height: 50px; width: 50px; /* Círculo pequeño */
+            overflow: hidden; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        /* ESTADO EXPANDIDO */
+        .music-control.expandido {
+            width: 260px; /* Se estira */
+            justify-content: space-between; padding: 0 20px;
+            background: rgba(0, 0, 0, 0.9); border-color: #ffd700;
+        }
+
+        /* ONDAS DE SONIDO */
+        .music-waves { display: flex; align-items: center; gap: 3px; min-width: 20px; }
         .music-waves span { display: inline-block; width: 3px; height: 10px; background: #ffd700; animation: waves 1s infinite ease-in-out; }
-        .music-waves span:nth-child(2) { animation-delay: 0.2s; } .music-waves span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes waves { 0%, 100% { height: 5px; } 50% { height: 15px; } }
+        .music-waves span:nth-child(2) { animation-delay: 0.2s; }
+        .music-waves span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes waves { 0%, 100% { height: 5px; } 50% { height: 20px; } }
+
+        /* TEXTO DE CANCIÓN (Oculto al inicio) */
+        .music-info {
+            display: none; color: white; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 10px; max-width: 140px;
+        }
+        .music-control.expandido .music-info { display: block; animation: fadeIn 0.5s; }
+
+        /* BOTÓN MUTE (Oculto al inicio) */
+        .btn-mute-icon {
+            display: none; color: #ffd700; font-size: 1.2rem; transition: transform 0.2s;
+        }
+        .btn-mute-icon:hover { transform: scale(1.2); }
+        .music-control.expandido .btn-mute-icon { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* TARJETAS */
         .dia-card { aspect-ratio: 1/1; background: linear-gradient(145deg, #d31027, #9b0e1e); border-radius: 15px; cursor: pointer; position: relative; transition: transform 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -135,8 +172,26 @@
             width: 100%; height: 500px; border: none; border-radius: 10px; 
             overflow: hidden; background-color: #525659; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
+        
+/* === BLOQUEO DE DESBORDAMIENTO HORIZONTAL === */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden !important;
+        }
 
-        @media (max-width: 768px) { .rama-izq, .rama-der { width: 150px; } .regalos-abajo { width: 120px; } .santa-wrapper { width: 150px; top: 10%; } }
+        /* Ajuste específico para el Santa Volador en móviles */
+        @media (max-width: 768px) {
+            .santa-flying, .santa-wrapper {
+                /* Hacemos que la animación empiece y termine DENTRO de límites seguros
+                   o reducimos el rango de movimiento */
+                right: -150px; /* Ajuste inicial */
+            }
+            
+            /* Reducimos el tamaño de los adornos laterales para que no empujen el ancho */
+            .rama-izq, .rama-der {
+                max-width: 30%; /* En vez de ancho fijo en px */
+            }
+        }
     </style>
 </head>
 <body>
@@ -168,10 +223,12 @@
         </div>
     </div>
 
-    <div class="music-control" id="btnMusicControl" onclick="toggleMusic()">
+    <div class="music-control" id="btnMusicControl" onclick="expandirPlayer(event)">
         <div class="music-waves"><span></span><span></span><span></span></div>
-        <i class="bi bi-volume-up-fill" id="iconMusic"></i>
-        <small id="songTitle">Reproduciendo...</small>
+        
+        <div class="music-info"><small id="songTitle">Cargando...</small></div>
+        
+        <i class="bi bi-volume-up-fill btn-mute-icon" id="iconMusic" onclick="toggleMute(event)"></i>
     </div>
 
     <div class="container py-4 position-relative" style="z-index: 5;">
@@ -191,8 +248,7 @@
             <div class="row g-3 g-md-4" id="gridCalendario"></div>
         </div>
         
-        <div class="text-center mt-5 text-white-50">
-            <small onclick="abrirModalSecreto()" style="cursor: pointer; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+        <div class="text-center mt-5 text-white-50" style="padding-bottom: 120px;"> <small onclick="abrirModalSecreto()" style="cursor: pointer; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
                 🎄 Con todo mi amor para ti 🎄
             </small>
         </div>
@@ -230,7 +286,7 @@
                     <h2 class="text-warning mb-4" style="font-size: 2rem;">🔐 Bóveda Secreta</h2>
                     <p class="text-dark">Ingresa la clave de 9 dígitos para abrir tu carta especial.</p>
                     <div class="mb-3 d-flex justify-content-center">
-                        <input type="password" id="inputCodigo" class="form-control w-50" maxlength="9" placeholder="">
+                        <input type="password" id="inputCodigo" class="form-control w-50" maxlength="9" placeholder="•••••••••">
                     </div>
                     <button onclick="verificarCodigo()" class="btn btn-warning rounded-pill px-4 fw-bold">Desbloquear</button>
                 </div>
@@ -256,9 +312,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // CONFIGURACIÓN MODO REAL (Todo diciembre)
+        // CONFIGURACIÓN DE TIEMPO
+        const MS_24H = 0; // MODO PRUEBA (Para ver que funciona todo). Cambiar a 86400000 para producción.
         const currentYear = new Date().getFullYear(); 
-        const FECHA_INICIO = new Date(currentYear, 11, 1).getTime(); // 1 de Diciembre
+        const FECHA_INICIO = new Date().getTime(); // MODO PRUEBA. Cambiar a new Date(currentYear, 10, 30).getTime();
 
         const canciones = {
             1: { url: "musica1.mp3", titulo: "Wham! - Last Christmas " },
@@ -311,32 +368,47 @@
         function entrarSitio() {
             overlay.style.opacity = '0';
             setTimeout(() => { overlay.style.display = 'none'; }, 800);
-            bgMusic.play().then(() => { iconMusic.className = "bi bi-volume-up-fill"; }).catch(e => console.log(e));
+            bgMusic.play().then(() => { iconMusic.className = "bi bi-volume-up-fill btn-mute-icon"; }).catch(e => console.log(e));
         }
 
-        function toggleMusic() {
-            if (bgMusic.paused) { bgMusic.play(); iconMusic.className = "bi bi-volume-up-fill"; } 
-            else { bgMusic.pause(); iconMusic.className = "bi bi-volume-mute-fill"; }
+        // ================= LÓGICA DE EXPANSIÓN Y MUTE =================
+        function expandirPlayer(e) {
+            const player = document.getElementById('btnMusicControl');
+            player.classList.toggle('expandido');
         }
+
+        function toggleMute(event) {
+            event.stopPropagation();
+            if (bgMusic.paused) {
+                bgMusic.play();
+                iconMusic.className = "bi bi-volume-up-fill btn-mute-icon";
+                document.querySelector('.music-waves').style.opacity = '1';
+            } else {
+                bgMusic.pause();
+                iconMusic.className = "bi bi-volume-mute-fill btn-mute-icon";
+                document.querySelector('.music-waves').style.opacity = '0.3';
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const player = document.getElementById('btnMusicControl');
+            if (!player.contains(event.target)) {
+                player.classList.remove('expandido');
+            }
+        });
+
         prepararMusica();
 
-        // ================= LÓGICA DE DÍAS Y FECHA REAL =================
-        // Esta función calcula qué día es hoy según la fecha
         function getDiaActualNavidad() {
             const ahora = Date.now();
-            if (ahora < FECHA_INICIO) return 0; // Aún no es diciembre
-            
-            // Calculamos diferencia en días
+            if (ahora < FECHA_INICIO) return 0; 
             const diff = ahora - FECHA_INICIO;
-            // Se suma 1 porque si pasaron 0 días, es el día 1
             const diaCalendario = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-            
-            // Si es mayor a 24, devolvemos 24 (todo abierto)
             return diaCalendario > 24 ? 24 : diaCalendario;
         }
 
         const secretModal = new bootstrap.Modal(document.getElementById('secretModal'));
-        const CODIGO_SECRETO = "83326666068822244666"; 
+        const CODIGO_SECRETO = "123456789"; 
 
         function abrirModalSecreto() {
             document.getElementById('step-code').style.display = 'block';
@@ -457,7 +529,6 @@
             const { abiertos, ultimo } = cargarDatos();
             const empezado = haEmpezadoLaTemporada();
             
-            // Calculamos qué día "deberíamos" poder abrir hoy (1 al 24)
             const diaPermitido = getDiaActualNavidad();
             const siguiente = abiertos.length + 1;
 
@@ -473,7 +544,6 @@
                     if (abiertos.includes(i)) { 
                         card.classList.add('abierto'); 
                     } else if (i <= diaPermitido && i === siguiente) { 
-                        // Solo ilumina si es el siguiente Y si la fecha lo permite
                         card.classList.add('disponible'); 
                     }
                 }
@@ -500,10 +570,7 @@
             const siguiente = abiertos.length + 1;
             const diaPermitido = getDiaActualNavidad();
 
-            // 1. Verificar orden
             if (dia !== siguiente) { alert("🤫 En orden amor."); return; }
-            
-            // 2. Verificar FECHA
             if (dia > diaPermitido) { alert("⏳ ¡Aún no es la fecha mi amor! Espera un poquito."); return; }
 
             abiertos.push(dia);
@@ -621,6 +688,4 @@
         setInterval(actualizarReloj, 1000);
     </script>
 </body>
-
 </html>
-
