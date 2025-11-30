@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario para Mi Amor ❤️</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        :root { --bs-body-bg: #0f2027; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #1e3c72, #2a5298);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png'), radial-gradient(circle at center, #1e3c72, #101b2e);
+            min-height: 100vh; color: #fff; overflow-x: hidden; position: relative;
+        }
+        h1, h2 { font-family: 'Mountains of Christmas', cursive; font-weight: 700; }
+
+        /* PANTALLA DE INICIO */
+        #overlay-inicio {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 32, 39, 0.98);
+            z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.8s ease;
+        }
+        .btn-inicio {
+            font-size: 2rem; padding: 15px 40px; border-radius: 50px;
+            background: linear-gradient(45deg, #d31027, #ea384d);
+            color: white; border: none; font-family: 'Mountains of Christmas', cursive;
+            box-shadow: 0 0 30px rgba(211, 16, 39, 0.6);
+            animation: pulseBtn 2s infinite; cursor: pointer;
+        }
+        @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* VISOR PANTALLA COMPLETA */
+        #fullscreen-viewer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000; display: none; 
+            justify-content: center; align-items: center;
+            cursor: zoom-out; backdrop-filter: blur(5px);
+        }
+        #fullscreen-img {
+            max-width: 95vw; max-height: 95vh;
+            border-radius: 5px; box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            object-fit: contain; animation: zoomIn 0.3s ease;
+        }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        #fullscreen-close { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; opacity: 0.8; cursor: pointer; }
+
+        /* EASTER EGG: LLUVIA DE AMOR */
+        .love-rain {
+            position: fixed; top: -10vh; font-size: 2rem; z-index: 20000;
+            pointer-events: none; animation: fallHeart linear forwards;
+        }
+        @keyframes fallHeart {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* RESTO ESTILOS */
+        .glass-container { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; z-index: 5; }
+        .adorno-fijo { position: fixed; pointer-events: none; z-index: 2; filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.5)); }
+        .rama-izq { top: 0; left: 0; width: 250px; } .rama-der { top: 0; right: 0; width: 250px; } .regalos-abajo { bottom: 10px; left: 10px; width: 180px; z-index: 6; }
+        
+        /* SANTA VOLADOR */
+        .santa-wrapper {
+            position: fixed; top: 15%; width: 250px; z-index: 20; 
+            animation: volarSanta 25s linear infinite; cursor: pointer;
+        }
+        .santa-img { width: 100%; opacity: 0.9; }
+        .santa-bubble {
+            position: absolute; bottom: 80%; left: 50%; transform: translateX(-50%);
+            background: white; color: #d31027; padding: 10px 15px; border-radius: 15px;
+            font-weight: bold; font-size: 0.9rem; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none; white-space: nowrap;
+        }
+        .santa-bubble::after { 
+            content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: white transparent transparent transparent;
+        }
+        .paused { animation-play-state: paused !important; }
+        @keyframes volarSanta { 
+            0% { right: -300px; transform: translateY(0); } 25% { transform: translateY(-30px); } 
+            50% { transform: translateY(0); } 75% { transform: translateY(30px); } 100% { right: 110%; transform: translateY(0); } 
+        }
+        
+        .music-control { position: fixed; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 10px 20px; z-index: 100; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .music-control:hover { background: rgba(0, 0, 0, 0.9); transform: scale(1.05); }
+        .music-waves span { display: inline-block; width: 3px; height: 10px; background: #ffd700; animation: waves 1s infinite ease-in-out; }
+        .music-waves span:nth-child(2) { animation-delay: 0.2s; } .music-waves span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes waves { 0%, 100% { height: 5px; } 50% { height: 15px; } }
+
+        /* TARJETAS */
+        .dia-card { aspect-ratio: 1/1; background: linear-gradient(145deg, #d31027, #9b0e1e); border-radius: 15px; cursor: pointer; position: relative; transition: transform 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .dia-card:hover { transform: translateY(-5px) scale(1.03); z-index: 10; box-shadow: 0 10px 25px rgba(211, 16, 39, 0.5); }
+        .img-dia { width: 60%; height: 60%; object-fit: contain; margin-bottom: 5px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3)); transition: transform 0.3s; }
+        .dia-card:hover .img-dia { transform: scale(1.1); }
+        .dia-numero { font-family: 'Mountains of Christmas', cursive; font-size: 1.8rem; color: #fff; text-shadow: 2px 2px 2px rgba(0,0,0,0.8); line-height: 1; }
+        .dia-card.bloqueado-total { filter: grayscale(1) brightness(0.6); cursor: not-allowed; }
+        .dia-card.disponible { background: linear-gradient(135deg, #fff7ad 0%, #ffd700 50%, #ffb300 100%) !important; border: 2px solid #fff; z-index: 20; animation: resplandorDorado 2s infinite ease-in-out; }
+        .dia-card.disponible .dia-numero { color: #d65a00; font-weight: bold; }
+        @keyframes resplandorDorado { 0% { box-shadow: 0 0 15px #ffd700; transform: scale(1.02); } 50% { box-shadow: 0 0 40px #ffd700; transform: scale(1.08); } 100% { box-shadow: 0 0 15px #ffd700; transform: scale(1.02); } }
+        .dia-card.abierto { background: #142921 !important; filter: grayscale(0.6); opacity: 0.9; }
+        .dia-card.abierto .dia-numero { text-decoration: line-through; opacity: 0.5; }
+        
+        .modal-content { background: #fff url('https://www.transparenttextures.com/patterns/snow.png'); border: 4px solid #d31027; border-radius: 20px; }
+        
+        /* ESTILOS FOTO MODAL */
+        #modalImageContainer { position: relative; width: 300px; height: 300px; margin: 20px auto; border-radius: 15px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #modalImagen { width: 100%; height: 100%; object-fit: contain; transition: filter 0.6s ease; }
+        .is-photo { object-fit: cover !important; } 
+        .img-container-locked #modalImagen { filter: blur(20px) brightness(0.7); }
+        .img-container-locked { cursor: pointer !important; } 
+        .heart-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; z-index: 10; background: rgba(0,0,0,0.3); pointer-events: none; }
+        .img-container-locked .heart-overlay { opacity: 1; }
+        .heartbeat-reveal { font-size: 4rem; color: #ff3366; filter: drop-shadow(0 0 10px rgba(255, 51, 102, 0.6)); animation: latidoRevelar 1.5s infinite; }
+        @keyframes latidoRevelar { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } }
+
+        /* ESTILOS DEL MODAL SECRETO (CARTA) */
+        #inputCodigo { 
+            text-align: center; letter-spacing: 5px; font-size: 1.5rem; font-weight: bold;
+            background-color: #222; color: #fff; border: 2px solid #ffd700;
+        }
+        #inputCodigo::placeholder { color: rgba(255,255,255,0.6); }
+        .shake-error { animation: shake 0.5s; border-color: red !important; background-color: #500 !important; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+        
+        #secret-pdf-container { 
+            width: 100%; height: 500px; border: none; border-radius: 10px; 
+            overflow: hidden; background-color: #525659; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) { .rama-izq, .rama-der { width: 150px; } .regalos-abajo { width: 120px; } .santa-wrapper { width: 150px; top: 10%; } }
+    </style>
+</head>
+<body>
+    
+    <div id="overlay-inicio">
+        <h1 class="text-warning mb-4 display-3">🎄 ¡Hola Mi Amor! 🎄</h1>
+        <button class="btn-inicio" onclick="entrarSitio()">
+            <i class="bi bi-play-circle-fill"></i> Abrir Calendario
+        </button>
+        <p class="mt-3 text-white-50">Toca para empezar la magia ✨</p>
+    </div>
+
+    <div id="fullscreen-viewer" onclick="cerrarFullscreen()">
+        <span id="fullscreen-close">×</span>
+        <img id="fullscreen-img" src="">
+    </div>
+
+    <audio id="audioUnlock" src="unlock.mp3"></audio>
+    <audio id="bgMusic" loop></audio>
+
+    <img src="ramitas_izquierda.png" class="adorno-fijo rama-izq">
+    <img src="ramitas_derecha.png" class="adorno-fijo rama-der">
+    <img src="regalos.png" class="adorno-fijo regalos-abajo">
+    
+    <div id="santa-wrapper" class="santa-wrapper" onclick="atraparSanta()">
+        <img src="santaClaus.gif" class="santa-img">
+        <div id="santa-msg" class="santa-bubble">
+            🎅 ¡Te estoy vigilando Amor!<br>Sé que eres impaciente...
+        </div>
+    </div>
+
+    <div class="music-control" id="btnMusicControl" onclick="toggleMusic()">
+        <div class="music-waves"><span></span><span></span><span></span></div>
+        <i class="bi bi-volume-up-fill" id="iconMusic"></i>
+        <small id="songTitle">Reproduciendo...</small>
+    </div>
+
+    <div class="container py-4 position-relative" style="z-index: 5;">
+        <div class="text-center mb-5 mt-4">
+            <h1 class="display-3 text-warning">Calendario de Adviento</h1>
+            
+            <h2 class="text-white h4">
+                Para mi Amor 
+                <span id="secretHeart" style="cursor:pointer; user-select:none; display:inline-block;" onclick="activarEasterEgg()">❤️</span>
+            </h2>
+            
+            <div class="mt-3 badge bg-dark bg-opacity-75 fs-6 fw-light border border-secondary px-3 py-2 rounded-pill">
+                <i class="bi bi-calendar-event text-warning"></i> <span id="infoTiempo">...</span>
+            </div>
+        </div>
+        <div class="glass-container p-4">
+            <div class="row g-3 g-md-4" id="gridCalendario"></div>
+        </div>
+        
+        <div class="text-center mt-5 text-white-50">
+            <small onclick="abrirModalSecreto()" style="cursor: pointer; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+                🎄 Con todo mi amor para ti 🎄
+            </small>
+        </div>
+    </div>
+
+    <div class="modal fade" id="regaloModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4 shadow-lg">
+                <h2 class="text-danger" id="modalTitulo" style="font-size: 2.5rem;">🎁</h2>
+                
+                <div id="modalImageContainer" onclick="gestionarClicImagen()">
+                    <img id="modalImagen" src="" alt="Imagen del día">
+                    <div class="heart-overlay">
+                        <i class="bi bi-heart-fill heartbeat-reveal"></i>
+                        <small class="d-block text-white mt-2 fw-bold">Toca para revelar</small>
+                    </div>
+                </div>
+                
+                <p class="fs-4 lead fw-bold mt-3" id="modalTexto" style="color:#333;"></p>
+                
+                <a id="btnLink" href="#" target="_blank" class="btn btn-warning btn-lg rounded-pill px-4 shadow mb-2" style="display:none; color: #333; font-weight:bold;">
+                    <i class="bi bi-box-arrow-up-right"></i> <span id="textoBtnLink">Ver sorpresa</span>
+                </a>
+
+                <button type="button" class="btn btn-danger btn-lg rounded-pill mt-2 px-5 shadow" data-bs-dismiss="modal">¡Me encanta! 😍</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="secretModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content text-center p-4 shadow-lg" style="border: 4px solid #ffd700;">
+                
+                <div id="step-code">
+                    <h2 class="text-warning mb-4" style="font-size: 2rem;">🔐 Bóveda Secreta</h2>
+                    <p class="text-dark">Ingresa la clave de 9 dígitos para abrir tu carta especial.</p>
+                    <div class="mb-3 d-flex justify-content-center">
+                        <input type="password" id="inputCodigo" class="form-control w-50" maxlength="9" placeholder="•••••••••">
+                    </div>
+                    <button onclick="verificarCodigo()" class="btn btn-warning rounded-pill px-4 fw-bold">Desbloquear</button>
+                </div>
+
+                <div id="step-letter" style="display: none;">
+                    <h2 class="text-danger mb-3">💌 Para Ti, Mi Vida</h2>
+                    
+                    <div id="secret-pdf-container">
+                        <embed src="carta_secreta.pdf#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" width="100%" height="100%">
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="carta_secreta.pdf" download="Carta_Para_Ti.pdf" class="btn btn-success rounded-pill px-4">
+                            <i class="bi bi-download"></i> Descargar Carta
+                        </a>
+                        <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // CONFIGURACIÓN MODO REAL (Todo diciembre)
+        const currentYear = new Date().getFullYear(); 
+        const FECHA_INICIO = new Date(currentYear, 11, 1).getTime(); // 1 de Diciembre
+
+        const canciones = {
+            1: { url: "musica1.mp3", titulo: "Wham! - Last Christmas " },
+            2: { url: "musica2.mp3", titulo: "Sleigh Ride" },
+            3: { url: "musica3.mp3", titulo: "Jingle Bell Rock" },
+            4: { url: "musica4.mp3", titulo: "Feliz Navidad" },
+            5: { url: "musica5.mp3", titulo: "Jingle Bells" },
+            6: { url: "musica6.mp3", titulo: "Rodolfo el Reno" },
+            7: { url: "musica7.mp3", titulo: "Santa Claus is Coming" },
+            8: { url: "musica19.mp3", titulo: "Winter Wonderland" },
+            9: { url: "musica9.mp3", titulo: "Let it Snow" },
+            10: { url: "musica10.mp3", titulo: "Frosty the Snowman" },
+            11: { url: "musica2.mp3", titulo: "Especial Jueves" },
+            12: { url: "musica12.mp3", titulo: "Deck the Halls" },
+            13: { url: "musica3.mp3", titulo: "Jingle Bell Rock" },
+            14: { url: "musica2.mp3", titulo: "Sleigh Ride" },
+            15: { url: "musica15.mp3", titulo: "It's Beginning to Look..." },
+            16: { url: "musica16.mp3", titulo: "The Christmas Song" },
+            17: { url: "musica17.mp3", titulo: "Holly Jolly Christmas" },
+            18: { url: "musica18.mp3", titulo: "Rockin' Around..." },
+            19: { url: "musica19.mp3", titulo: "Here Comes Santa Claus" },
+            20: { url: "musica20.mp3", titulo: "Happy Holiday" },
+            21: { url: "musica21.mp3", titulo: "Happy Xmas (War is Over)" },
+            22: { url: "musica22.mp3", titulo: "Do They Know It's..." },
+            23: { url: "musica23.mp3", titulo: "Last Christmas (Acoustic)" },
+            24: { url: "musica24.mp3", titulo: "Noche de Paz" }
+        };
+        const cancionDefault = { url: "music.mp3", titulo: "Música Navideña" };
+
+        const bgMusic = document.getElementById('bgMusic');
+        const songTitleLabel = document.getElementById('songTitle');
+        const iconMusic = document.getElementById('iconMusic');
+        const overlay = document.getElementById('overlay-inicio');
+
+        function prepararMusica() {
+            const ahora = Date.now();
+            let diaActual = 1;
+            if (ahora >= FECHA_INICIO) {
+                const diffTime = Math.abs(ahora - FECHA_INICIO);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                diaActual = diffDays > 24 ? 24 : diffDays;
+                if(diffDays === 0) diaActual = 1;
+            }
+            const track = canciones[diaActual] || canciones[diaActual-1] || cancionDefault;
+            bgMusic.src = track.url;
+            songTitleLabel.innerText = `Día ${diaActual}: ${track.titulo}`;
+            bgMusic.volume = 0.5;
+        }
+
+        function entrarSitio() {
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 800);
+            bgMusic.play().then(() => { iconMusic.className = "bi bi-volume-up-fill"; }).catch(e => console.log(e));
+        }
+
+        function toggleMusic() {
+            if (bgMusic.paused) { bgMusic.play(); iconMusic.className = "bi bi-volume-up-fill"; } 
+            else { bgMusic.pause(); iconMusic.className = "bi bi-volume-mute-fill"; }
+        }
+        prepararMusica();
+
+        // ================= LÓGICA DE DÍAS Y FECHA REAL =================
+        // Esta función calcula qué día es hoy según la fecha
+        function getDiaActualNavidad() {
+            const ahora = Date.now();
+            if (ahora < FECHA_INICIO) return 0; // Aún no es diciembre
+            
+            // Calculamos diferencia en días
+            const diff = ahora - FECHA_INICIO;
+            // Se suma 1 porque si pasaron 0 días, es el día 1
+            const diaCalendario = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Si es mayor a 24, devolvemos 24 (todo abierto)
+            return diaCalendario > 24 ? 24 : diaCalendario;
+        }
+
+        const secretModal = new bootstrap.Modal(document.getElementById('secretModal'));
+        const CODIGO_SECRETO = "123456789"; 
+
+        function abrirModalSecreto() {
+            document.getElementById('step-code').style.display = 'block';
+            document.getElementById('step-letter').style.display = 'none';
+            document.getElementById('inputCodigo').value = "";
+            secretModal.show();
+        }
+
+        function verificarCodigo() {
+            const input = document.getElementById('inputCodigo');
+            if (input.value === CODIGO_SECRETO) {
+                document.getElementById('step-code').style.display = 'none';
+                document.getElementById('step-letter').style.display = 'block';
+            } else {
+                input.classList.add('shake-error');
+                input.value = "";
+                input.placeholder = "Incorrecto";
+                setTimeout(() => {
+                    input.classList.remove('shake-error');
+                    input.placeholder = "•••••••••";
+                }, 1000);
+            }
+        }
+
+        let clickCount = 0;
+        let clickTimer;
+
+        function activarEasterEgg() {
+            clickCount++;
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+            const heart = document.getElementById('secretHeart');
+            heart.style.transform = "scale(1.4)";
+            setTimeout(() => heart.style.transform = "scale(1)", 150);
+            if (clickCount === 5) { lanzarLluviaCorazones(); clickCount = 0; }
+        }
+
+        function lanzarLluviaCorazones() {
+            for (let i = 0; i < 80; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = ['❤️', '💖', '😍', '😘', '💕'][Math.floor(Math.random() * 5)];
+                heart.className = 'love-rain';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(heart);
+                setTimeout(() => { heart.remove(); }, 5000);
+            }
+        }
+
+        function atraparSanta() {
+            const container = document.getElementById('santa-wrapper');
+            const msg = document.getElementById('santa-msg');
+            container.classList.add('paused');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                container.classList.remove('paused');
+                msg.style.display = 'none';
+            }, 4000);
+        }
+
+        const iconosGrid = {
+            1: "campana.png", 2: "arbol.gif", 
+            3: "Imagen3.png", 
+            4: "Imagen4.png", 5: "Imagen5.png", 6: "cascanueces.gif", 7: "Imagen7.png", 8: "Imagen8.png", 
+            9: "Imagen9.png", 10: "Imagen10.png", 11: "Imagen11.png", 12: "Imagen12.png", 
+            13: "Imagen13.png", 
+            14: "Imagen14.png",
+            15: "snowman.gif", 16: "Imagen16.png", 17: "Imagen17.png", 18: "Imagen18.png", 
+            19: "Imagen19.png", 
+            20: "Imagen20.png", 
+            21: "Imagen21.png", 
+            22: "Imagen22.png", 23: "Imagen23.png", 24: "Imagen28.png"
+        };
+
+        const fotosModal = {
+            3: "foto_pareja_1.jpg", 
+            14: "foto_pareja_2.jpg",
+            19: "foto_pareja_3.jpg",
+            21: "foto_pareja_4.jpg"
+        };
+
+        const contenidoDias = {
+            1: { texto: "🍿 ¡Bienvenida a tu calendario! Hoy empezamos tranqui: Noche de peli [Grinch] y regaloneo.", },
+            2: { texto: "🎵 He creado esta playlist con canciones para la navidad 💖🎄.", enlace: "https://open.spotify.com/playlist/4Q1A6OQDyfJYB6UQyZ2kWs?si=3f326c7c58fb4b94", boton: "Escuchar en Spotify" },
+            3: { texto: "💖 Mientras nos tengamos uno al otro.. Podremos con el mundo 🌏💖", },
+            4: { texto: "🍕 ¡CUPÓN! Hoy tú eliges qué comemos. Yo invito o yo cocino, tú mandas.", },
+            5: { texto: "🧠 ¿Qué tanto recuerdas de nosotros? Hice este pequeño test...", enlace: "https://forms.gle/8oSdaLQT2xAhLHAg6", boton: "Hacer la Trivia" },
+            6: { texto: "🎄 Debes cambiar la foto de perfil de whatsapp por una de nosotros navideña!", },
+            7: { texto: "🍫 ¡CUPÓN! Vale por tu chocolate o postre favorito. Te lo debo.", },
+            8: { texto: "🤣 Vi esto y me dio mucha risa. Tienes que verlo.", enlace: "https://www.tiktok.com/@melixoxo._/video/7313215072891981061?is_from_webapp=1&sender_device=pc", boton: "Ver Video" },
+            9: { texto: "👑 ¡CUPÓN DE ORO! Vale por tener la razón en nuestra próxima discusión pequeña. (Úsalo con sabiduría) 😉.", },
+            10: { texto: "📸 Hoy quiero que nos tomemos una foto juntos para actualizar nuestros fondos de pantalla.", },
+            11: { texto: "📍 ¡Arréglate! Hoy jueves te invito a una salida especial aquí: [Recuerda seleccionar como llegar y luego ubicacion actual]", enlace: "https://www.google.com/maps/dir/?api=1&destination=Nombre+Del+Lugar+O+Direccion", boton: "Ver Ruta GPS" },
+            12: { texto: "🎬 ¡CUPÓN! Vale por elegir la película sin que yo me queje.", },
+            13: { texto: "😘 Cuando me veas dame uno de esos besos ricos que me das!", },
+            14: { texto: "💕 Recuerda que tienes una hermosa familia que te acompañaran hasta el final.. ", },
+            15: { texto: "💋 ¡CUPÓN! Vale por una sesión de 100 besos ininterrumpidos.", },
+            16: { texto: "💌 Hoy solo quiero recordarte que eres lo mejor que me ha pasado este año.", },
+            17: { texto: "🍦 ¡CUPÓN! Vale por un helado o antojo ahora mismo.", },
+            18: { texto: "🤫 ¡CUPÓN MISTERIOSO! Te contaré un secreto o una fantasía que no te he dicho.", },
+            19: { texto: "😘 Desde muy pequeños que nos seguimos amando ", },
+            20: { texto: "🎲 ¡CUPÓN! Noche de juegos de mesa o videojuegos juntos.", },
+            21: { texto: "🎄 Espero que esta viejita pascura me entregue mis regalos 🥰", },
+            22: { texto: "✨ ¡CUPÓN MÁGICO! Pídeme un deseo (que sea posible) y te lo cumplo hoy.", },
+            23: { texto: "📝 Tengo una carta escrita a mano para ti esperando ser leída.", },
+            24: { texto: "🎄 ¡Feliz Navidad Amor Mío! Gracias por completar este calendario. Te amo infinito. ❤️", }
+        };
+
+        const modal = new bootstrap.Modal(document.getElementById('regaloModal'));
+
+        function cargarDatos() { return { abiertos: JSON.parse(localStorage.getItem('adv_final_abiertos') || '[]'), ultimo: parseInt(localStorage.getItem('adv_final_ultimo') || '0') }; }
+        function haEmpezadoLaTemporada() { return Date.now() >= FECHA_INICIO; }
+
+        function renderizar() {
+            const grid = document.getElementById('gridCalendario');
+            grid.innerHTML = '';
+            const { abiertos, ultimo } = cargarDatos();
+            const empezado = haEmpezadoLaTemporada();
+            
+            // Calculamos qué día "deberíamos" poder abrir hoy (1 al 24)
+            const diaPermitido = getDiaActualNavidad();
+            const siguiente = abiertos.length + 1;
+
+            for (let i = 1; i <= 24; i++) {
+                const col = document.createElement('div');
+                col.className = 'col-6 col-md-4 col-lg-2'; 
+                const card = document.createElement('div');
+                card.className = 'dia-card shadow';
+                
+                if (!empezado) { 
+                    card.classList.add('bloqueado-total'); 
+                } else {
+                    if (abiertos.includes(i)) { 
+                        card.classList.add('abierto'); 
+                    } else if (i <= diaPermitido && i === siguiente) { 
+                        // Solo ilumina si es el siguiente Y si la fecha lo permite
+                        card.classList.add('disponible'); 
+                    }
+                }
+                const img = iconosGrid[i] || 'regalos.png';
+                card.innerHTML = `<img src="${img}" class="img-dia"><span class="dia-numero">${i}</span>`;
+                
+                card.onclick = () => { 
+                    if(!empezado) { 
+                        alert("✋ ¡Espera al 1 de Diciembre!"); 
+                    } else { 
+                        abrir(i); 
+                    } 
+                };
+                col.appendChild(card);
+                grid.appendChild(col);
+            }
+        }
+
+        function abrir(dia) {
+            if (!haEmpezadoLaTemporada()) return;
+            let { abiertos, ultimo } = cargarDatos();
+            if (abiertos.includes(dia)) { mostrarMsg(dia); return; }
+
+            const siguiente = abiertos.length + 1;
+            const diaPermitido = getDiaActualNavidad();
+
+            // 1. Verificar orden
+            if (dia !== siguiente) { alert("🤫 En orden amor."); return; }
+            
+            // 2. Verificar FECHA
+            if (dia > diaPermitido) { alert("⏳ ¡Aún no es la fecha mi amor! Espera un poquito."); return; }
+
+            abiertos.push(dia);
+            localStorage.setItem('adv_final_abiertos', JSON.stringify(abiertos));
+            localStorage.setItem('adv_final_ultimo', Date.now());
+            document.getElementById('audioUnlock').play().catch(()=>{});
+            renderizar();
+            mostrarMsg(dia);
+            actualizarReloj();
+        }
+
+        function gestionarClicImagen() {
+            const container = document.getElementById('modalImageContainer');
+            const imgEl = document.getElementById('modalImagen');
+            if (container.classList.contains('img-container-locked')) {
+                container.classList.remove('img-container-locked');
+            } else if (imgEl.classList.contains('is-photo')) {
+                abrirFullscreen(imgEl.src);
+            }
+        }
+
+        function abrirFullscreen(src) {
+            const viewer = document.getElementById('fullscreen-viewer');
+            const img = document.getElementById('fullscreen-img');
+            img.src = src;
+            viewer.style.display = 'flex';
+        }
+
+        function cerrarFullscreen() {
+            document.getElementById('fullscreen-viewer').style.display = 'none';
+        }
+
+        function mostrarMsg(dia) {
+            const content = contenidoDias[dia] || { texto: "Te amo ❤️" };
+            document.getElementById('modalTitulo').innerText = `🎁 Día ${dia} 🎄`;
+            document.getElementById('modalTexto').innerText = content.texto;
+            
+            const container = document.getElementById('modalImageContainer');
+            const imgEl = document.getElementById('modalImagen');
+            
+            if (fotosModal[dia]) {
+                imgEl.src = fotosModal[dia];
+                imgEl.classList.add('is-photo'); 
+                container.classList.add('img-container-locked'); 
+            } else {
+                imgEl.src = iconosGrid[dia] || 'regalos.png';
+                imgEl.classList.remove('is-photo'); 
+                container.classList.remove('img-container-locked');
+            }
+
+            const btnLink = document.getElementById('btnLink');
+            const txtBtn = document.getElementById('textoBtnLink');
+            if (content.enlace) { 
+                btnLink.style.display = 'inline-block'; btnLink.href = content.enlace; txtBtn.innerText = content.boton || "Ver Sorpresa"; 
+            } else { btnLink.style.display = 'none'; }
+
+            modal.show();
+        }
+
+        function actualizarReloj() {
+            const info = document.getElementById('infoTiempo');
+            const ahora = Date.now();
+            
+            // 1. SI AÚN NO EMPIEZA (Antes del 1 de Dic)
+            if (ahora < FECHA_INICIO) {
+                const diff = FECHA_INICIO - ahora;
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                info.innerText = `Faltan: ${d}d ${h}h ${m}m ${s}s`;
+                if (diff <= 1000) renderizar();
+                return;
+            }
+
+            // 2. SI YA EMPEZÓ EL CALENDARIO
+            const { abiertos } = cargarDatos();
+            const sig = abiertos.length + 1;
+            
+            if (sig > 24) { 
+                info.innerText = "¡Feliz Navidad! 🎅"; 
+                return; 
+            }
+
+            const diaPermitido = getDiaActualNavidad();
+            
+            // Si el siguiente regalo está DISPONIBLE (hoy o antes)
+            if (sig <= diaPermitido) {
+                info.innerHTML = "¡Tienes regalitos! 🎁";
+            } else {
+                // AQUÍ ESTÁ EL CAMBIO: CONTADOR HASTA MEDIANOCHE
+                const now = new Date();
+                // Calcular la próxima medianoche
+                const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+                const diff = tomorrow - now;
+
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // Formato con ceros (04h 05m 09s)
+                const hh = h < 10 ? "0" + h : h;
+                const mm = m < 10 ? "0" + m : m;
+                const ss = s < 10 ? "0" + s : s;
+
+                info.innerText = `Siguiente en: ${hh}h ${mm}m ${ss}s ⏳`;
+            }
+        }
+
+        setInterval(() => { const n = document.createElement('div'); n.innerText = '❄'; n.style.position='fixed'; n.style.top='-10px'; n.style.left=Math.random()*100+'vw'; n.style.color='rgba(255,255,255,0.8)'; n.style.pointerEvents='none'; n.style.fontSize = Math.random()*20+10+'px'; n.style.zIndex = '1'; n.style.animation = `caida ${Math.random()*3+4}s linear`; document.body.appendChild(n); setTimeout(()=>n.remove(), 7000); }, 300);
+        const styleSheet = document.createElement("style"); styleSheet.innerText = `@keyframes caida { to { transform: translateY(105vh); } }`; document.head.appendChild(styleSheet);
+
+        renderizar();
+        actualizarReloj();
+        setInterval(actualizarReloj, 1000);
+    </script>
+</body>
+</html>
