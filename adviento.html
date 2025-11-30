@@ -15,6 +15,7 @@
             font-family: 'Poppins', sans-serif;
             background: radial-gradient(circle at center, #1e3c72, #2a5298);
             background-image: url('https://www.transparenttextures.com/patterns/stardust.png'), radial-gradient(circle at center, #1e3c72, #101b2e);
+            overflow-x: hidden; /* <--- ESTO ES LO IMPORTANTE */
             min-height: 100vh; color: #fff; overflow-x: hidden; position: relative;
         }
         h1, h2 { font-family: 'Mountains of Christmas', cursive; font-weight: 700; }
@@ -172,8 +173,9 @@
             width: 100%; height: 500px; border: none; border-radius: 10px; 
             overflow: hidden; background-color: #525659; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
-        
-/* === BLOQUEO DE DESBORDAMIENTO HORIZONTAL === */
+
+
+        /* === BLOQUEO DE DESBORDAMIENTO HORIZONTAL === */
         html, body {
             max-width: 100%;
             overflow-x: hidden !important;
@@ -284,9 +286,9 @@
                 
                 <div id="step-code">
                     <h2 class="text-warning mb-4" style="font-size: 2rem;">🔐 Bóveda Secreta</h2>
-                    <p class="text-dark">Ingresa la clave de 9 dígitos para abrir tu carta especial.</p>
+                    <p class="text-dark">Ingresa la clave de 22 dígitos para abrir tu carta especial.</p>
                     <div class="mb-3 d-flex justify-content-center">
-                        <input type="password" id="inputCodigo" class="form-control w-50" maxlength="9" placeholder="•••••••••">
+                        <input type="password" id="inputCodigo" class="form-control w-50" maxlength="22" placeholder="">
                     </div>
                     <button onclick="verificarCodigo()" class="btn btn-warning rounded-pill px-4 fw-bold">Desbloquear</button>
                 </div>
@@ -312,10 +314,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // CONFIGURACIÓN DE TIEMPO
-        const MS_24H = 0; // MODO PRUEBA (Para ver que funciona todo). Cambiar a 86400000 para producción.
+// CONFIGURACIÓN DE TIEMPO (MODO REAL)
+        const MS_24H = 86400000; // 24 Horas reales
         const currentYear = new Date().getFullYear(); 
-        const FECHA_INICIO = new Date().getTime(); // MODO PRUEBA. Cambiar a new Date(currentYear, 10, 30).getTime();
+        
+        // 1 de Diciembre (El mes 11 es Diciembre en código)
+        const FECHA_INICIO = new Date(currentYear, 11, 1).getTime();
 
         const canciones = {
             1: { url: "musica1.mp3", titulo: "Wham! - Last Christmas " },
@@ -373,12 +377,15 @@
 
         // ================= LÓGICA DE EXPANSIÓN Y MUTE =================
         function expandirPlayer(e) {
+            // Evita que el click se propague si viene del botón mute
             const player = document.getElementById('btnMusicControl');
             player.classList.toggle('expandido');
         }
 
         function toggleMute(event) {
+            // Evita que el player se cierre al dar click
             event.stopPropagation();
+            
             if (bgMusic.paused) {
                 bgMusic.play();
                 iconMusic.className = "bi bi-volume-up-fill btn-mute-icon";
@@ -390,8 +397,10 @@
             }
         }
 
+        // CERRAR PLAYER AL CLICAR FUERA
         document.addEventListener('click', function(event) {
             const player = document.getElementById('btnMusicControl');
+            // Si el click NO fue en el player, cierra la expansión
             if (!player.contains(event.target)) {
                 player.classList.remove('expandido');
             }
@@ -408,7 +417,7 @@
         }
 
         const secretModal = new bootstrap.Modal(document.getElementById('secretModal'));
-        const CODIGO_SECRETO = "123456789"; 
+        const CODIGO_SECRETO = "83326666068822244666"; 
 
         function abrirModalSecreto() {
             document.getElementById('step-code').style.display = 'block';
@@ -428,7 +437,7 @@
                 input.placeholder = "Incorrecto";
                 setTimeout(() => {
                     input.classList.remove('shake-error');
-                    input.placeholder = "•••••••••";
+                    input.placeholder = " ";
                 }, 1000);
             }
         }
@@ -634,7 +643,6 @@
             const info = document.getElementById('infoTiempo');
             const ahora = Date.now();
             
-            // 1. SI AÚN NO EMPIEZA (Antes del 1 de Dic)
             if (ahora < FECHA_INICIO) {
                 const diff = FECHA_INICIO - ahora;
                 const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -646,8 +654,7 @@
                 return;
             }
 
-            // 2. SI YA EMPEZÓ EL CALENDARIO
-            const { abiertos } = cargarDatos();
+            const { abiertos, ultimo } = cargarDatos();
             const sig = abiertos.length + 1;
             
             if (sig > 24) { 
@@ -657,25 +664,18 @@
 
             const diaPermitido = getDiaActualNavidad();
             
-            // Si el siguiente regalo está DISPONIBLE (hoy o antes)
             if (sig <= diaPermitido) {
                 info.innerHTML = "¡Tienes regalitos! 🎁";
             } else {
-                // AQUÍ ESTÁ EL CAMBIO: CONTADOR HASTA MEDIANOCHE
                 const now = new Date();
-                // Calcular la próxima medianoche
                 const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
                 const diff = tomorrow - now;
-
                 const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-                // Formato con ceros (04h 05m 09s)
                 const hh = h < 10 ? "0" + h : h;
                 const mm = m < 10 ? "0" + m : m;
                 const ss = s < 10 ? "0" + s : s;
-
                 info.innerText = `Siguiente en: ${hh}h ${mm}m ${ss}s ⏳`;
             }
         }
