@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esperando la Navidad... 🎄</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            z-index: 10;
+            position: relative;
+        }
+
+        /* Cajas del Contador */
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            min-width: 90px;
+            margin: 0 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            color: #ffd700;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        /* Botón Mágico */
+        .btn-magic {
+            background: linear-gradient(45deg, #d31027, #ea384d);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            font-family: 'Mountains of Christmas', cursive;
+            box-shadow: 0 0 20px rgba(211, 16, 39, 0.6);
+            transition: all 0.3s;
+            margin-top: 50px;
+            z-index: 10;
+            position: relative;
+            text-decoration: none;
+            cursor: pointer; /* Ahora siempre es clickeable */
+            opacity: 0.8;
+        }
+
+        /* Animación de negación (temblor) */
+        .btn-shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .btn-magic.activo {
+            opacity: 1;
+            animation: pulse 2s infinite;
+            background: linear-gradient(45deg, #11998e, #38ef7d); /* Verde éxito */
+        }
+
+        .btn-magic.activo:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 40px #38ef7d;
+            color: #fff;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* MENSAJE FLOTANTE (TOAST) */
+        .mensaje-alerta {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s, top 0.3s;
+            pointer-events: none;
+            min-width: 300px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .mensaje-alerta.mostrar {
+            opacity: 1;
+            top: 15%; /* Sube un poquito al aparecer */
+        }
+
+        /* ================= IMÁGENES DECORATIVAS ================= */
+        .adorno {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+            filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.5));
+        }
+
+        .top-left { top: 0; left: 0; width: 280px; }
+        .top-right { top: 0; right: 0; width: 280px; }
+        .bottom-left { 
+            bottom: 20px; left: 30px; width: 220px; 
+            animation: flotar 4s ease-in-out infinite; 
+        }
+
+        @keyframes flotar {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Nieve */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            animation: fall linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes fall { to { transform: translateY(105vh); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .countdown-row { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            .countdown-box { min-width: 70px; margin: 5px; padding: 15px; }
+            h1 { font-size: 2.2rem; margin-top: 60px; }
+            .top-left { width: 180px; opacity: 0.9; }
+            .top-right { width: 180px; opacity: 0.9; }
+            .bottom-left { width: 150px; bottom: 10px; left: 10px; opacity: 0.9; }
+            .mensaje-alerta { width: 90%; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <img src="ramitas_izquierda.png" class="adorno top-left" alt="Decoracion izquierda">
+    <img src="ramitas_derecha.png" class="adorno top-right" alt="Decoracion derecha">
+    <img src="regalos.png" class="adorno bottom-left" alt="Regalos">
+
+    <div id="alertaImpaciente" class="mensaje-alerta">Mensaje aquí</div>
+
+    <div class="container position-relative" style="z-index: 5;">
+        <h1 id="titulo">🎄 Falta poco mi amor 🎄</h1>
+        
+        <div class="d-flex justify-content-center countdown-row mt-4" id="contadorContainer">
+            <div class="countdown-box">
+                <span class="number" id="days">00</span>
+                <span class="label">Días</span>
+            </div>
+            <div class="countdown-box">
+                <span class="number" id="hours">00</span>
+                <span class="label">Hs</span>
+            </div>
+            <div class="countdown-box">
+                <span class="number" id="minutes">00</span>
+                <span class="label">Min</span>
+            </div>
+            <div class="countdown-box">
+                <span class="number" id="seconds">00</span>
+                <span class="label">Seg</span>
+            </div>
+        </div>
+
+        <a href="#" id="botonEntrar" class="btn btn-magic mt-5">
+            <i class="bi bi-lock-fill"></i> Espera al 1 de Dic
+        </a>
+    </div>
+
+    <script>
+        // ================= CONFIGURACIÓN DE FECHA =================
+        const currentYear = new Date().getFullYear();
+        // FECHA META: 1 de Diciembre
+        const targetDate = new Date(currentYear, 11, 1).getTime(); 
+
+        // ⚠️ MODO PRUEBA: Descomenta la siguiente línea para probar que funciona
+        // const targetDate = new Date().getTime() + 10000; // 10 segundos
+
+        // ================= FRASES PARA EL BOTÓN BLOQUEADO =================
+        const frasesEspera = [
+            "✋ ¡No seas impaciente mi amor!",
+            "👀 ¡Te estoy viendo! Falta poco.",
+            "🚫 Aún no es hora, traviesa.",
+            "🎄 Santa dice que tienes que esperar.",
+            "🎁 ¡No hagas trampa! Te amo ❤️",
+            "🔒 El candado sigue cerrado...",
+            "⏳ Paciencia, todo llega...",
+            "💖 ¡Ya casi! Aguanta un poquito."
+        ];
+
+        const btn = document.getElementById('botonEntrar');
+        const titulo = document.getElementById('titulo');
+        const alerta = document.getElementById('alertaImpaciente');
+        
+        let estaHabilitado = false;
+
+        // LÓGICA DEL BOTÓN
+        btn.addEventListener('click', function(e) {
+            if (!estaHabilitado) {
+                e.preventDefault(); // Evita que recargue o vaya al link
+                mostrarMensajeRandom();
+                agitarBoton();
+            }
+            // Si está habilitado, deja que el <a href> funcione normal
+        });
+
+        function mostrarMensajeRandom() {
+            // Elegir frase aleatoria
+            const frase = frasesEspera[Math.floor(Math.random() * frasesEspera.length)];
+            alerta.innerText = frase;
+            
+            // Mostrar
+            alerta.classList.add('mostrar');
+
+            // Ocultar después de 2 segundos
+            setTimeout(() => {
+                alerta.classList.remove('mostrar');
+            }, 2500);
+        }
+
+        function agitarBoton() {
+            btn.classList.add('btn-shake');
+            setTimeout(() => {
+                btn.classList.remove('btn-shake');
+            }, 500);
+        }
+
+        // CONTADOR
+        function actualizarContador() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                // LLEGÓ EL MOMENTO
+                estaHabilitado = true;
+                clearInterval(intervalo);
+                titulo.innerHTML = "✨ ¡Llegó la Navidad! ✨";
+                document.getElementById('contadorContainer').style.display = 'none';
+
+                // Transformar botón
+                btn.classList.add('activo');
+                btn.innerHTML = '<i class="bi bi-gift-fill"></i> ¡Entrar al Calendario!';
+                btn.href = "adviento.html"; // Asignar el link real
+                return;
+            }
+
+            // Cálculos
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = days < 10 ? '0' + days : days;
+            document.getElementById('hours').innerText = hours < 10 ? '0' + hours : hours;
+            document.getElementById('minutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+        }
+
+        const intervalo = setInterval(actualizarContador, 1000);
+        actualizarContador();
+
+        // Nieve
+        function crearNieve() {
+            for(let i=0; i<40; i++){
+                const copo = document.createElement('div');
+                copo.className = 'snowflake';
+                copo.innerHTML = '❄';
+                copo.style.left = Math.random() * 100 + 'vw';
+                copo.style.opacity = Math.random();
+                copo.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                copo.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                document.body.appendChild(copo);
+            }
+        }
+        crearNieve();
+    </script>
+</body>
+</html>
